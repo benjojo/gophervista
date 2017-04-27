@@ -31,10 +31,11 @@ func GetBinary(uri string) (out []byte, err error) {
 
 func requestRaw(path, hostname string, port int) (out []byte, err error) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port))
-	defer conn.Close()
 	if err != nil {
 		return out, err
 	}
+
+	defer conn.Close()
 
 	payload := fmt.Sprintf("%s\r\n", path)
 	_, err = conn.Write([]byte(payload))

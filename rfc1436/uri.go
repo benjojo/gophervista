@@ -25,7 +25,7 @@ func parseURI(inputURI string) (path, hostname string, port int, err error) {
 			if err != nil {
 				return "", "", 0, fmt.Errorf("port on URI is invalid")
 			}
-			return U.Path, U.Host, int(p), nil
+			return U.Path, parts[0], int(p), nil
 		}
 		return U.Path, U.Host, 70, nil
 	}
