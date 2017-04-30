@@ -6,6 +6,8 @@ import (
 
 	"time"
 
+	"regexp"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -27,18 +29,22 @@ func (cq *crawlerQueue) Init(databasepath string) error {
 	cq.db = db
 
 	cq.maketableifnotexists("assets",
-		"CREATE TABLE assets (id INTEGER PRIMARY KEY, timestamp NUMERIC, path TEXT, type TEXT, lastcrawled NUMERIC);", db)
+		"CREATE TABLE assets (id INTEGER PRIMARY KEY, timestamp NUMERIC, path TEXT, type TEXT, lastcrawled NUMERIC);")
+
+	cq.maketableifnotexists("restrictions",
+		"CREATE TABLE `restrictions` (`id` INTEGER,`pattern` TEXT,`nolearn` INTEGER DEFAULT 0,`nocrawl` INTEGER DEFAULT 0,PRIMARY KEY(id));")
+
 	return nil
 }
 
-func (cq *crawlerQueue) maketableifnotexists(table, makestring string, db *sql.DB) {
+func (cq *crawlerQueue) maketableifnotexists(table, makestring string) {
 	// Check that the table for radio info exists
 	tablename := ""
-	db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", table).Scan(&tablename)
+	cq.db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", table).Scan(&tablename)
 
 	if tablename != table {
 		log.Printf("Made a new %s table", table)
-		db.Exec(makestring)
+		cq.db.Exec(makestring)
 	}
 
 }
@@ -75,4 +81,54 @@ func (cq *crawlerQueue) FlagItem(path string, gtypestr string) {
 			return
 		}
 	}
+}
+
+type permissionRow struct {
+	Pattern  *regexp.Regexp
+	CanLearn bool
+	CanCrawl bool
+}
+
+var permissionsCache []permissionRow
+
+func (cq *crawlerQueue) CheckItemPerms(path string) (canCrawl bool, canLearn bool) {
+	if len(permissionsCache) == 0 || permissionsCache == nil {
+		log.Printf("Loading perms")
+		permissionsCache = make([]permissionRow, 0)
+		rows, err := cq.db.Query("SELECT pattern,nolearn,nocrawl FROM restrictions;")
+		if err != nil {
+			log.Fatalf("Unable to load crawling restrictions/perms, %s", err.Error())
+		}
+
+		for rows.Next() {
+			var iCanLearn, iCanCrawl int
+			var RERaw string
+
+			err := rows.Scan(&RERaw, &canLearn, &canCrawl)
+			if err != nil {
+				log.Fatalf("Unable to process crawling restrictions/perms, %s", err.Error())
+			}
+
+			RE := regexp.MustCompile(RERaw)
+
+			n := permissionRow{
+				Pattern:  RE,
+				CanCrawl: iCanCrawl == 0,
+				CanLearn: iCanLearn == 0,
+			}
+
+			permissionsCache = append(permissionsCache, n)
+		}
+		log.Printf("%d perm restrictions loaded", len(permissionsCache))
+	}
+
+	// Now that it's all loaded...
+
+	for _, testcase := range permissionsCache {
+		if testcase.Pattern.MatchString(path) {
+			return !testcase.CanCrawl, !testcase.CanLearn
+		}
+	}
+
+	return true, true
 }

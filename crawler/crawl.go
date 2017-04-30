@@ -15,12 +15,20 @@ import (
 func crawl(Queue crawlerQueue, datadir string) {
 
 	for {
-		time.Sleep(time.Second)
 		asset := Queue.GetItemToCrawl()
 		if asset == "" {
 			log.Print("Nothing to crawl...")
 			continue
 		}
+
+		canCrawl, canLearn := Queue.CheckItemPerms(asset)
+
+		if !canCrawl {
+			log.Printf("Can't crawl %s because of restriction", asset)
+			Queue.FlagItemAsCrawled(asset)
+			continue
+		}
+		time.Sleep(time.Second)
 
 		d, ci, err := rfc1436.Get(asset)
 		log.Printf("Grabbing %s", asset)
@@ -42,8 +50,12 @@ func crawl(Queue crawlerQueue, datadir string) {
 			if ln.Type == rfc1436.TypeMenuEntity ||
 				ln.Type == rfc1436.TypeTextFile {
 				newpath := fmt.Sprintf("gopher://%s:%d%s", ln.Host, ln.Port, ln.Path)
-				log.Printf("Found item to add %s", newpath)
-				Queue.FlagItem(newpath, ln.Type)
+				if canLearn {
+					Queue.FlagItem(newpath, ln.Type)
+					log.Printf("Found item to add %s", newpath)
+				} else {
+					log.Printf("Can't add %s to crawl list, Domain has restriction in place", newpath)
+				}
 			}
 		}
 		Queue.FlagItemAsCrawled(asset)
