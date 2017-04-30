@@ -42,9 +42,13 @@ func requestRaw(path, hostname string, port int) (out []byte, info GopherConnect
 	if err != nil {
 		return out, cinfo, err
 	}
-	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 
 	defer conn.Close()
+
+	if path == "/" {
+		path = ""
+	}
 
 	payload := fmt.Sprintf("%s\r\n", path)
 	_, err = conn.Write([]byte(payload))
