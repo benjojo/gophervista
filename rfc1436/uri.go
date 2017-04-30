@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+type GopherConnectionInfo struct {
+	Path     string
+	Hostname string
+	Port     int
+}
+
 func parseURI(inputURI string) (path, hostname string, port int, err error) {
 	if strings.HasPrefix(inputURI, "gopher://") {
 		U, err := url.Parse(inputURI)

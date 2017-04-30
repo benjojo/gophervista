@@ -76,6 +76,9 @@ func parseDocument(in []byte) (D Document, err error) {
 		}
 
 		e.Content = parts[0]
+		if !strings.HasPrefix(parts[1], "/") {
+			parts[1] = "/" + parts[1]
+		}
 		e.Path = parts[1]
 		e.Host = parts[2]
 		pn, err := strconv.ParseInt(parts[3], 10, 16)

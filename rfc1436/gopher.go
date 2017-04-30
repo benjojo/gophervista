@@ -4,45 +4,54 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"time"
 )
 
-func Get(uri string) (out Document, err error) {
-	bin, err := GetBinary(uri)
+func Get(uri string) (out Document, info GopherConnectionInfo, err error) {
+	bin, ci, err := GetBinary(uri)
 	if err != nil {
-		return out, err
+		return out, GopherConnectionInfo{}, err
 	}
 
 	Doc, err := parseDocument(bin)
 	if err != nil {
-		return out, err
+		return out, ci, err
 	}
 
-	return Doc, err
+	return Doc, ci, err
 }
 
-func GetBinary(uri string) (out []byte, err error) {
+func GetBinary(uri string) (out []byte, info GopherConnectionInfo, err error) {
 	path, hostname, port, err := parseURI(uri)
 	if err != nil {
-		return out, err
+		return out, GopherConnectionInfo{}, err
 	}
 
 	return requestRaw(path, hostname, port)
 }
 
-func requestRaw(path, hostname string, port int) (out []byte, err error) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port))
-	if err != nil {
-		return out, err
+func requestRaw(path, hostname string, port int) (out []byte, info GopherConnectionInfo, err error) {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", hostname, port), time.Second*5)
+
+	cinfo := GopherConnectionInfo{
+		Path:     path,
+		Hostname: hostname,
+		Port:     port,
 	}
+
+	if err != nil {
+		return out, cinfo, err
+	}
+	conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 
 	defer conn.Close()
 
 	payload := fmt.Sprintf("%s\r\n", path)
 	_, err = conn.Write([]byte(payload))
 	if err != nil {
-		return out, err
+		return out, cinfo, err
 	}
 
 	out, err = ioutil.ReadAll(conn)
-	return out, err
+	return out, cinfo, err
 }
