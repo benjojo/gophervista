@@ -22,7 +22,7 @@ func Get(uri string) (out Document, info GopherConnectionInfo, err error) {
 }
 
 func GetBinary(uri string) (out []byte, info GopherConnectionInfo, err error) {
-	path, hostname, port, err := parseURI(uri)
+	path, hostname, port, err := ParseURI(uri)
 	if err != nil {
 		return out, GopherConnectionInfo{}, err
 	}

@@ -13,7 +13,7 @@ type GopherConnectionInfo struct {
 	Port     int
 }
 
-func parseURI(inputURI string) (path, hostname string, port int, err error) {
+func ParseURI(inputURI string) (path, hostname string, port int, err error) {
 	if strings.HasPrefix(inputURI, "gopher://") {
 		U, err := url.Parse(inputURI)
 		if err != nil {
@@ -35,5 +35,5 @@ func parseURI(inputURI string) (path, hostname string, port int, err error) {
 		}
 		return U.Path, U.Host, 70, nil
 	}
-	return parseURI("gopher://" + inputURI)
+	return ParseURI("gopher://" + inputURI)
 }
