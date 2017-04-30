@@ -3,16 +3,17 @@ package main
 import (
 	"database/sql"
 	"log"
-
-	"time"
-
 	"regexp"
+	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type crawlerQueue struct {
-	db *sql.DB
+	db       *sql.DB
+	dblock   sync.Mutex
+	flagchan chan FlagRequest
 }
 
 func (cq *crawlerQueue) Init(databasepath string) error {
@@ -34,11 +35,13 @@ func (cq *crawlerQueue) Init(databasepath string) error {
 	cq.maketableifnotexists("restrictions",
 		"CREATE TABLE `restrictions` (`id` INTEGER,`pattern` TEXT,`nolearn` INTEGER DEFAULT 0,`nocrawl` INTEGER DEFAULT 0,PRIMARY KEY(id));")
 
+	cq.flagchan = make(chan FlagRequest, 1)
+	go cq.FlagChannelConsumer(cq.flagchan)
+
 	return nil
 }
 
 func (cq *crawlerQueue) maketableifnotexists(table, makestring string) {
-	// Check that the table for radio info exists
 	tablename := ""
 	cq.db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", table).Scan(&tablename)
 
@@ -50,6 +53,8 @@ func (cq *crawlerQueue) maketableifnotexists(table, makestring string) {
 }
 
 func (cq *crawlerQueue) GetItemToCrawl() string {
+	cq.dblock.Lock()
+	defer cq.dblock.Unlock()
 	asset := ""
 	err := cq.db.QueryRow("SELECT path FROM assets WHERE lastcrawled < ? LIMIT 1", time.Now().Unix()-604800).Scan(&asset)
 	if err != nil {
@@ -58,28 +63,58 @@ func (cq *crawlerQueue) GetItemToCrawl() string {
 	return asset
 }
 
+func (cq *crawlerQueue) GetItemToCrawlFromIndex(indexin int) (asset string, index int) {
+	cq.dblock.Lock()
+	defer cq.dblock.Unlock()
+	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? LIMIT 1", time.Now().Unix()-604800, indexin).Scan(&asset, &index)
+	if err != nil {
+		return "", 0
+	}
+	return asset, index
+}
+
 func (cq *crawlerQueue) FlagItemAsCrawled(path string) {
+	cq.dblock.Lock()
+	defer cq.dblock.Unlock()
 	_, err := cq.db.Exec("UPDATE assets SET lastcrawled = ? WHERE path = ?", time.Now().Unix(), path)
 	if err != nil {
 		log.Printf("Unable to flag asset as crawled? %s", err.Error())
 	}
 }
 
-func (cq *crawlerQueue) FlagItem(path string, gtypestr string) {
-	test := 0
-	err := cq.db.QueryRow("SELECT COUNT(*) path FROM assets WHERE path = ?;", path).Scan(&test)
-	if err != nil {
-		log.Printf("Huh, unable to see if an item to be should be crawled -  %s", err.Error())
-		return
-	}
+type FlagRequest struct {
+	Path     string
+	GTypeStr string
+}
 
-	if test == 0 {
-		// Fantastic, We can add it
-		_, err = cq.db.Exec("INSERT INTO `assets` (`id`,`timestamp`,`path`,`type`,`lastcrawled`) VALUES (NULL,?,?,?,0);", time.Now().Unix(), path, gtypestr)
+func (cq *crawlerQueue) FlagItem(path string, gtypestr string) {
+	cq.flagchan <- FlagRequest{
+		Path:     path,
+		GTypeStr: gtypestr,
+	}
+}
+
+func (cq *crawlerQueue) FlagChannelConsumer(in chan FlagRequest) {
+	for rq := range in {
+		cq.dblock.Lock()
+		test := 0
+		err := cq.db.QueryRow("SELECT COUNT(*) path FROM assets WHERE path = ?;", rq.Path).Scan(&test)
 		if err != nil {
-			log.Printf("Huh, unable to flag to be should be crawled -  %s", err.Error())
-			return
+			log.Printf("Huh, unable to see if an item to be should be crawled -  %s", err.Error())
+			continue
 		}
+
+		if test == 0 {
+			log.Printf("Found item to add %s", rq.Path)
+
+			// Fantastic, We can add it
+			_, err = cq.db.Exec("INSERT INTO `assets` (`id`,`timestamp`,`path`,`type`,`lastcrawled`) VALUES (NULL,?,?,?,0);", time.Now().Unix(), rq.Path, rq.GTypeStr)
+			if err != nil {
+				log.Printf("Huh, unable to flag to be should be crawled -  %s", err.Error())
+				continue
+			}
+		}
+		cq.dblock.Unlock()
 	}
 }
 

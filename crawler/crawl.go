@@ -1,21 +1,53 @@
 package main
 
 import (
+	"encoding/base32"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
-
-	"encoding/base32"
-	"io/ioutil"
 
 	"github.com/benjojo/gophervista/rfc1436"
 )
 
 func crawl(Queue crawlerQueue, datadir string) {
+	var workers map[string]chan string
+	workers = make(map[string]chan string)
+	indexn := 0
 
 	for {
-		asset := Queue.GetItemToCrawl()
+		time.Sleep(time.Millisecond * 5)
+		var asset string
+		asset, indexn = Queue.GetItemToCrawlFromIndex(indexn)
+		if asset == "" {
+			log.Print("Nothing to crawl...")
+			indexn = 0
+			continue
+		}
+		indexn++
+
+		_, hn, _, err := rfc1436.ParseURI(asset)
+		if err != nil {
+			log.Printf("Invalid URI, %s", err.Error())
+			continue
+		}
+
+		if workers[hn] == nil {
+			ch := make(chan string, 1)
+			workers[hn] = ch
+			go crawlWorker(ch, Queue, datadir)
+		}
+		select {
+		case workers[hn] <- asset: // ignore if it's full.
+		default:
+		}
+
+	}
+}
+
+func crawlWorker(assetChan chan string, Queue crawlerQueue, datadir string) {
+	for asset := range assetChan {
 		if asset == "" {
 			log.Print("Nothing to crawl...")
 			continue
@@ -41,7 +73,7 @@ func crawl(Queue crawlerQueue, datadir string) {
 		storefolder := fmt.Sprintf("%s/raw/%s-%d/", datadir, ci.Hostname, ci.Port)
 		err = os.MkdirAll(storefolder, 0755)
 		if err != nil && err != os.ErrExist {
-			log.Printf("Unable to make directory structure (%s) to store responce in, %s")
+			log.Printf("Unable to make directory structure (%s) to store responce in, %s", storefolder, err.Error())
 		}
 
 		ioutil.WriteFile(storefolder+base32shortcut(asset), d.Raw, 0755)
@@ -52,16 +84,13 @@ func crawl(Queue crawlerQueue, datadir string) {
 				newpath := fmt.Sprintf("gopher://%s:%d%s", ln.Host, ln.Port, ln.Path)
 				if canLearn {
 					Queue.FlagItem(newpath, ln.Type)
-					log.Printf("Found item to add %s", newpath)
 				} else {
 					log.Printf("Can't add %s to crawl list, Domain has restriction in place", newpath)
 				}
 			}
 		}
 		Queue.FlagItemAsCrawled(asset)
-
 	}
-
 }
 
 func base32shortcut(path string) string {
