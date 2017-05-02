@@ -65,7 +65,19 @@ func (cq *crawlerQueue) GetItemToCrawl() string {
 func (cq *crawlerQueue) GetItemToCrawlFromIndex(indexin int, skiphost string) (asset string, index int) {
 	cq.dblock.Lock()
 	defer cq.dblock.Unlock()
-	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? AND path NOT LIKE ? LIMIT 1", time.Now().Unix()-604800, indexin, fmt.Sprintf("%%%s%%", skiphost)).Scan(&asset, &index)
+	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? AND path NOT LIKE ? LIMIT 1",
+		time.Now().Unix()-604800, indexin, fmt.Sprintf("%%%s%%", skiphost)).Scan(&asset, &index)
+	if err != nil {
+		return "", 0
+	}
+	return asset, index
+}
+
+func (cq *crawlerQueue) GetItemToCrawlFromIndexFromHost(indexin int, targethost string) (asset string, index int) {
+	cq.dblock.Lock()
+	defer cq.dblock.Unlock()
+	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? AND path LIKE ? LIMIT 1",
+		time.Now().Unix()-604800, indexin, fmt.Sprintf("%%%s%%", targethost)).Scan(&asset, &index)
 	if err != nil {
 		return "", 0
 	}

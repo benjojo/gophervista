@@ -46,6 +46,7 @@ func crawl(Queue crawlerQueue, datadir string) {
 			ch := make(chan string, 1)
 			workers[hn] = ch
 			go crawlWorker(ch, Queue, datadir)
+			go crawlerFeeder(ch, hn, Queue)
 		}
 		select {
 		case workers[hn] <- asset: // ignore if it's full.
@@ -54,6 +55,39 @@ func crawl(Queue crawlerQueue, datadir string) {
 			skiphost = hn
 		}
 
+	}
+}
+
+func crawlerFeeder(assetChan chan string, hn string, Queue crawlerQueue) {
+	indexn := 0
+	totallydry := 0
+
+	for {
+		time.Sleep(time.Millisecond * 500)
+		var asset string
+		asset, indexn = Queue.GetItemToCrawlFromIndexFromHost(indexn, hn)
+		if asset == "" {
+			log.Printf("Nothing to crawl, Reseting pointer for %s", hn)
+			indexn = 0
+			totallydry++
+			if totallydry > 1 {
+				time.Sleep(time.Minute)
+				log.Printf("Really lothing left to crawl for %s, Chilling back for a bit", hn)
+			}
+			continue
+		}
+		indexn++
+
+		canCrawl, _ := Queue.CheckItemPerms(asset)
+
+		if !canCrawl {
+			log.Printf("Can't crawl %s because of restriction", asset)
+			Queue.FlagItemAsCrawled(asset)
+			continue
+		}
+
+		assetChan <- asset
+		totallydry = 0
 	}
 }
 
