@@ -15,17 +15,26 @@ func crawl(Queue crawlerQueue, datadir string) {
 	var workers map[string]chan string
 	workers = make(map[string]chan string)
 	indexn := 0
+	skiphost := "impossibleaaaaaaaaaaaaaaaaaa"
 
 	for {
 		time.Sleep(time.Millisecond * 5)
 		var asset string
-		asset, indexn = Queue.GetItemToCrawlFromIndex(indexn)
+		asset, indexn = Queue.GetItemToCrawlFromIndex(indexn, skiphost)
 		if asset == "" {
 			log.Print("Nothing to crawl...")
 			indexn = 0
 			continue
 		}
 		indexn++
+
+		canCrawl, _ := Queue.CheckItemPerms(asset)
+
+		if !canCrawl {
+			log.Printf("Can't crawl %s because of restriction", asset)
+			Queue.FlagItemAsCrawled(asset)
+			continue
+		}
 
 		_, hn, _, err := rfc1436.ParseURI(asset)
 		if err != nil {
@@ -40,7 +49,9 @@ func crawl(Queue crawlerQueue, datadir string) {
 		}
 		select {
 		case workers[hn] <- asset: // ignore if it's full.
+			skiphost = "impossibleaaaaaaaaaaa"
 		default:
+			skiphost = hn
 		}
 
 	}
@@ -53,13 +64,8 @@ func crawlWorker(assetChan chan string, Queue crawlerQueue, datadir string) {
 			continue
 		}
 
-		canCrawl, canLearn := Queue.CheckItemPerms(asset)
+		_, canLearn := Queue.CheckItemPerms(asset)
 
-		if !canCrawl {
-			log.Printf("Can't crawl %s because of restriction", asset)
-			Queue.FlagItemAsCrawled(asset)
-			continue
-		}
 		time.Sleep(time.Second)
 
 		d, ci, err := rfc1436.Get(asset)

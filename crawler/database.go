@@ -2,12 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"regexp"
 	"sync"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type crawlerQueue struct {
@@ -63,10 +62,10 @@ func (cq *crawlerQueue) GetItemToCrawl() string {
 	return asset
 }
 
-func (cq *crawlerQueue) GetItemToCrawlFromIndex(indexin int) (asset string, index int) {
+func (cq *crawlerQueue) GetItemToCrawlFromIndex(indexin int, skiphost string) (asset string, index int) {
 	cq.dblock.Lock()
 	defer cq.dblock.Unlock()
-	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? LIMIT 1", time.Now().Unix()-604800, indexin).Scan(&asset, &index)
+	err := cq.db.QueryRow("SELECT path,id FROM assets WHERE lastcrawled < ? AND id > ? AND path NOT LIKE ? LIMIT 1", time.Now().Unix()-604800, indexin, fmt.Sprintf("%%%s%%", skiphost)).Scan(&asset, &index)
 	if err != nil {
 		return "", 0
 	}
@@ -74,11 +73,17 @@ func (cq *crawlerQueue) GetItemToCrawlFromIndex(indexin int) (asset string, inde
 }
 
 func (cq *crawlerQueue) FlagItemAsCrawled(path string) {
-	cq.dblock.Lock()
-	defer cq.dblock.Unlock()
 	_, err := cq.db.Exec("UPDATE assets SET lastcrawled = ? WHERE path = ?", time.Now().Unix(), path)
 	if err != nil {
 		log.Printf("Unable to flag asset as crawled? %s", err.Error())
+		if err.Error() == "database is locked" { // aaaa a aaaa aaaaaaaa terrible i'm so sorry
+			log.Printf("Retrying in a moment due to %s", err.Error())
+			go func() {
+				// Well we are already doing sins here, so what's one more?
+				time.Sleep(time.Second)
+				cq.FlagItemAsCrawled(path)
+			}()
+		}
 	}
 }
 
