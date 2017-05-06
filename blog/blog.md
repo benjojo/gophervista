@@ -79,12 +79,15 @@ was deployed to listen on * and relay connections back to the local instance, ev
 
 The only problem with using a 20 year old indexer, is that it's likely a **very** bad idea to expose directly to the internet, The other issue is that most of the pages the interface serves referaces local ( as in, file:// ) assets, meaning that a simple reverse proxy would not work.
 
-In addition, local paths are not very useful to people searching, For this `alta_sanitise` was written to provide a sane front end to it, while still keeping the windows 98 AltaVista index as it's backend
+In addition, local paths are not very useful to people searching, For this `alta-sanitise` was written to provide a sane front end to it, while still keeping the windows 98 AltaVista index as it's backend
 
 To do this, I produce a file system containing all the files that were downloaded, and name them their database ID:
 
 ![A sample search on the unaltered interface](simple-search.png)
 
+However in alta-sanitise, we use the database we formed using crawling, to rewrite the URL's into something viewable
+
+![A sample search on the production interface](rewritten-search.png)
 
 
 ## Provide data to the indexer
