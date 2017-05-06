@@ -9,11 +9,15 @@ IMPORT_PATH := github.com/benjojo/gophervista
 IGNORED_PACKAGES := /vendor/
 
 .PHONY: all
-all: build
+all: crawler filesystem-gen
 
-.PHONY: build
-build: .GOPATH/.ok
+.PHONY: crawler
+crawler: .GOPATH/.ok
 	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/crawler
+
+.PHONY: filesystem-gen
+filesystem-gen: .GOPATH/.ok
+	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/filesystem-gen
 
 ### Code not in the repository root? Another binary? Add to the path like this.
 # .PHONY: otherbin

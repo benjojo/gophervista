@@ -26,3 +26,5 @@ _testmain.go
 /bin
 /data
 crawl.db
+crawl.db*
+*.tar
