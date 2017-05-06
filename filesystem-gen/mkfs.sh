@@ -3,7 +3,7 @@ set -e
 
 if ! df -h | grep -Fq loop0; then
     echo "Need to make FS"
-    losetup -d /dev/loop0
+    losetup -d /dev/loop0 || echo "Non fatal, continuing"
     dd if=/dev/zero of=filesystem.img bs=1 count=0 seek=8G
     sfdisk filesystem.img < filesystem-gen/layout.sfdisk
     losetup /dev/loop0 filesystem.img
