@@ -52,7 +52,7 @@ A simple rfc1436 implementation was written and a crawler began (slowly, there a
 
 At this point I started to explore gopher space itself, and I have to say, It's a wonderful place of just pure content, a far cry away from the modern internet where CSS and adtech is stuffed in every corner
 
-![A ttygif of using gopher](link/to/ttygif.gif)
+![A ttygif of using gopher](tty-of-gopher.gif)
 
 ## Indexing the content
 
@@ -61,11 +61,11 @@ desktop computers. The issue however it is win32 only software, I didn't try run
 
 Using a already [fantastic guide from NeoZeed](https://virtuallyfun.superglobalmegacorp.com/2017/02/25/personal-altavista-utzoo-reloaded/) I ended up provisioning my Windows 98 search "server"
 
-![altavista being installed]()
+![altavista being installed](installer.png)
 
 Confirming that the search engine works:
 
-![altavista test search]()
+![altavista test search](example-search.png)
 
 As NeoZeed found out, the search interface only listens on loopback (hardcoded), this is very annoying if you want to expose it to the wider world! To solve this [stunnel](https://www.stunnel.org/index.html) 
 was deployed to listen on * and relay connections back to the local instance.
