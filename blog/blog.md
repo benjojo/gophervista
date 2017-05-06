@@ -5,7 +5,9 @@ Most users who use the internet today, are mostly focused on three protocols, HT
 
 While these users may not care these days how their pages are displayed to them, there was once a competing protocol to the protocol that we known and love that is HTTP.
 
-Location just 10 ports down from HTTP, is [Gopher](https://www.ietf.org/rfc/rfc1436.txt) on TCP port 70, A protocol that looks a lot like a much more basic HTTP/1.0 while a basic HTTP/1.0 request may look like this:
+Located just 10 ports down from HTTP, is [Gopher](https://www.ietf.org/rfc/rfc1436.txt) on TCP port 70, A protocol that looks a lot like a much more basic HTTP/1.0.
+
+While a basic HTTP/1.0 request may look like this:
 
 ```
 
@@ -61,6 +63,9 @@ desktop computers. The issue however it is win32 only software, I didn't try run
 
 Using a already [fantastic guide from NeoZeed](https://virtuallyfun.superglobalmegacorp.com/2017/02/25/personal-altavista-utzoo-reloaded/) I ended up provisioning my Windows 98 search "server"
 
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">I never thought I be doing this again, and yet, here we are! Join me in the adventures of &quot;oh god we are installing windows 98 again&quot; <a href="https://t.co/Ub83PQ4sV7">pic.twitter.com/Ub83PQ4sV7</a></p>&mdash; Ben Cox (@Benjojo12) <a href="https://twitter.com/Benjojo12/status/860893238831480833">May 6, 2017</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 ![altavista being installed](installer.png)
 
 Confirming that the search engine works:
@@ -68,9 +73,18 @@ Confirming that the search engine works:
 ![altavista test search](example-search.png)
 
 As NeoZeed found out, the search interface only listens on loopback (hardcoded), this is very annoying if you want to expose it to the wider world! To solve this [stunnel](https://www.stunnel.org/index.html) 
-was deployed to listen on * and relay connections back to the local instance.
+was deployed to listen on * and relay connections back to the local instance, even over SSL! [Using a pretty questionable default SSL certificate too](https://crt.sh/?id=130496527) [(A)](http://archive.is/WJNYb)!
 
-## Sanitise the index 
+## Sanitise the index interface
+
+The only problem with using a 20 year old indexer, is that it's likely a **very** bad idea to expose directly to the internet, The other issue is that most of the pages the interface serves referaces local ( as in, file:// ) assets, meaning that a simple reverse proxy would not work.
+
+In addition, local paths are not very useful to people searching, For this `alta_sanitise` was written to provide a sane front end to it, while still keeping the windows 98 AltaVista index as it's backend
+
+To do this, I produce a file system containing all the files that were downloaded, and name them their database ID:
+
+![A sample search on the unaltered interface](simple-search.png)
+
 
 
 ## Provide data to the indexer
