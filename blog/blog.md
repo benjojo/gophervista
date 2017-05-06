@@ -75,6 +75,29 @@ Confirming that the search engine works:
 As NeoZeed found out, the search interface only listens on loopback (hardcoded), this is very annoying if you want to expose it to the wider world! To solve this [stunnel](https://www.stunnel.org/index.html) 
 was deployed to listen on * and relay connections back to the local instance, even over SSL! [Using a pretty questionable default SSL certificate too](https://crt.sh/?id=130496527) [(A)](http://archive.is/WJNYb)!
 
+## Providing data to the indexer
+
+Because the indexer and backend is a Windows 98 QEMU VM, There has to be a way of giving that VM approxamatly 5GB of tiny files for the AltaVista indexer to see and include in the index, For this, I chose to make a FAT32 file system every 24 hours as a snapshot of the crawled data, and then restart the crawling VM to see the new files. This worked really quite well in testing with a small amount of files, however a few issues became apparent, First of all FAT32 does have file limits that need to be paid attention to. For example, FAT32 is not able to have more than 255 files in the root directory, so you have to be sure to spread out your files in folder structures.
+
+Another issue to keep in mind is that the maximum drive size for FAT32 is 32GB (approx), This means the amount of textual content can't go bigger than that ( or we would have to spawn more virtual drives ) this is however a non issue at this time, because the crawled content is far below that.
+
+Issues were found during the crawling of a "production size" data set that would manifest in the system resetting at a random point during the indexing program running:
+
+![gif of windows 98 and the cralwer randomly crashing](random-crash.gif)
+
+After tweaking the settings involving the disk caches, a slightly more constructive error was obtained:
+
+![A blue screen of death](bsod.png)
+
+This is good! I can search for `exception 05 has occurred at 0028:C2920074` ! Right? As it happens, there is very little infomation about this kind of crash on the internet (it may have existed at somepoint in the past, but since been removed, afterall, the OS is 20 years old), however the one infomation I could gather from searching is that it was VFAT driver related, suspecting a bad combo between high IO load and QEMU's [INT_13](https://en.wikipedia.org/wiki/INT_13H) implementation, I went to the only other file system/data input system avalible, CD/DVD ROM!
+
+After doing a small 500MB test ( a test that FAT32 could not pass ) we had a small index!
+
+![The test index built](index-built.png)
+
+At this point we had to scale up the solution to the 300k / 4 GB of files, I discovered that Windows 98 does support DVD's but not 4GB file systems, To solve this I split it over 3 DVD drives.
+
+
 ## Sanitise the index interface
 
 The only problem with using a 20 year old indexer, is that it's likely a **very** bad idea to expose directly to the internet, The other issue is that most of the pages the interface serves referaces local ( as in, file:// ) assets, meaning that a simple reverse proxy would not work.
@@ -88,9 +111,6 @@ To do this, I produce a file system containing all the files that were downloade
 However in alta-sanitise, we use the database we formed using crawling, to rewrite the URL's into something viewable
 
 ![A sample search on the production interface](rewritten-search.png)
-
-
-## Provide data to the indexer
 
 ## Final flow
 

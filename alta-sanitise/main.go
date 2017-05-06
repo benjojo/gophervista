@@ -30,9 +30,9 @@ func main() {
 	http.ListenAndServe(*listen, http.DefaultServeMux)
 }
 
-var titlematcher = regexp.MustCompile("<strong>(\\d+)\\.txt</strong>")
+var titlematcher = regexp.MustCompile(`<strong>(\d+)\.(?:TXT|txt)</strong>`)
 var urlmatcher = regexp.MustCompile("href=(http[^>]+)")
-var url2matcher = regexp.MustCompile(`(d:\\\d+\\\d+.txt)`)
+var url2matcher = regexp.MustCompile(`([DdeE]:\\\d+\\\d+\.(?:TXT|txt))`)
 var url3matcher = regexp.MustCompile("<dd><a href=(http[^>]+)")
 
 func backendSearchEntry(rw http.ResponseWriter, req *http.Request) {
@@ -127,6 +127,7 @@ func backendSearchEntry(rw http.ResponseWriter, req *http.Request) {
 			gopherstr = fmt.Sprintf("gopher://%s:%d/%d%s", hn, port, datatype, p)
 
 			htmlpage = strings.Replace(htmlpage, fmt.Sprintf("<strong>%d.txt", dbid), fmt.Sprintf("<strong>%s", gopherstr), -1)
+			htmlpage = strings.Replace(htmlpage, fmt.Sprintf("<strong>%d.TXT", dbid), fmt.Sprintf("<strong>%s", gopherstr), -1)
 
 			url1 := url2matcher.FindAllStringSubmatch(line, 1)
 			if len(url1) != 1 {
