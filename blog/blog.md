@@ -95,7 +95,7 @@ After doing a small 500MB test ( a test that FAT32 could not pass ) we had a sma
 
 ![The test index built](index-built.png)
 
-At this point we had to scale up the solution to the 300k / 4 GB of files, I discovered that Windows 98 does support DVD's but not 4GB file systems, To solve this I split it over 3 DVD drives.
+At this point we had to scale up the solution to the 300k / 4 GB of files, I discovered that Windows 98 does support DVD's however only shows in the UI that the drive is 2GB, even if the drive itself is much larger than that, any how, that turned out to not matter as all content was accessable on the drive and a inital index was (slowly) built.
 
 
 ## Sanitise the index interface
@@ -112,7 +112,9 @@ However in alta-sanitise, we use the database we formed using crawling, to rewri
 
 ![A sample search on the production interface](rewritten-search.png)
 
-## Final flow
+To ensure the server powering this project could be used for another project, lighttpd was put in front as a reverse proxy and currently cached with Cloudflare.
+
+Leaving the final flow looking like this:
 
 ```
                                     Internet
@@ -154,3 +156,24 @@ However in alta-sanitise, we use the database we formed using crawling, to rewri
 |                                                         |
 +---------------------------------------------------------+
 ```
+
+# Monitoring windows 98
+
+Most of my servers are monitoried using collectd, Unfortunetly there is no Windows 98 client for collectd, so I decided to make one.
+
+A simple Visual Basic 6 application will poll every 10 seconds and output [collectd command strings](https://collectd.org/wiki/index.php/Plain_text_protocol#PUTVAL) over the serial port ( where it can be passed on to collectd on the hypervisor ):
+
+<picture>
+
+This code can be found seperatly at (giving some troubled soul may find this useful out side of gopher crawled): 
+
+# Giving back to the community
+
+Now that I have a sizeable index of the gopher space, I feel like I should give back to gopher space, For this reason I have also written into my libary support for running a server, Golang HTTP style.
+
+```
+
+
+```
+
+You can find my blog on gopher at `gopher.blog.benjojo.co.uk`. You can find all of the code for this project over at: https://github.com/benjojo/gophervista
