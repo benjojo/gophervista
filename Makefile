@@ -9,7 +9,7 @@ IMPORT_PATH := github.com/benjojo/gophervista
 IGNORED_PACKAGES := /vendor/
 
 .PHONY: all
-all: crawler filesystem-gen alta-sanitise
+all: crawler filesystem-gen alta-sanitise blog-gopher-bridge
 
 .PHONY: crawler
 crawler: .GOPATH/.ok
@@ -22,6 +22,10 @@ filesystem-gen: .GOPATH/.ok
 .PHONY: alta-sanitise
 alta-sanitise: .GOPATH/.ok
 	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/alta-sanitise
+
+.PHONY: blog-gopher-bridge
+blog-gopher-bridge: .GOPATH/.ok
+	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/blog-gopher-bridge
 
 ### Code not in the repository root? Another binary? Add to the path like this.
 # .PHONY: otherbin
