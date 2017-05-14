@@ -116,7 +116,11 @@ To ensure the server powering this project could be used for another project, li
 
 Leaving the final flow looking like this:
 
+![Final flow](flow.png)
+
 ```
+REMOVE ME: EDITORS NOTE FOR FINAL FLOW 
+
                                     Internet
 
                                         +
@@ -165,7 +169,7 @@ A simple Visual Basic 6 application will poll every 10 seconds and output [colle
 
 <picture>
 
-This code can be found separately at (giving some troubled soul may find this useful out side of gopher crawled): 
+This code can be found separately at (giving some troubled soul may find this useful out side of a gopher crawler): https://github.com/benjojo/win32-collectd
 
 # Giving back to the community
 
