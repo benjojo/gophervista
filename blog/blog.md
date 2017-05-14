@@ -165,15 +165,14 @@ A simple Visual Basic 6 application will poll every 10 seconds and output [colle
 
 <picture>
 
-This code can be found seperatly at (giving some troubled soul may find this useful out side of gopher crawled): 
+This code can be found separately at (giving some troubled soul may find this useful out side of gopher crawled): 
 
 # Giving back to the community
 
-Now that I have a sizeable index of the gopher space, I feel like I should give back to gopher space, For this reason I have also written into my libary support for running a server, Golang HTTP style.
+Now that I have a sizeable index of the gopher space, I feel like I should give back to gopher space:
 
-```
+![my blog on gopher](tty-my-blog.gif)
 
+You can now find my blog on gopher at `gopher.blog.benjojo.co.uk`. 
 
-```
-
-You can find my blog on gopher at `gopher.blog.benjojo.co.uk`. You can find all of the code for this project over at: https://github.com/benjojo/gophervista
+You can find all of the code for this project over at: https://github.com/benjojo/gophervista
