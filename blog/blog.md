@@ -77,7 +77,7 @@ was deployed to listen on * and relay connections back to the local instance, ev
 
 ## Providing data to the indexer
 
-Because the indexer and backend is a Windows 98 QEMU VM, There has to be a way of giving that VM approxamatly 5GB of tiny files for the AltaVista indexer to see and include in the index, For this, I chose to make a FAT32 file system every 24 hours as a snapshot of the crawled data, and then restart the crawling VM to see the new files. This worked really quite well in testing with a small amount of files, however a few issues became apparent, First of all FAT32 does have file limits that need to be paid attention to. For example, FAT32 is not able to have more than 255 files in the root directory, so you have to be sure to spread out your files in folder structures.
+Because the indexer and backend is a Windows 98 QEMU VM, There has to be a way of giving that VM approximately 5GB of tiny files for the AltaVista indexer to see and include in the index, For this, I chose to make a FAT32 file system every 24 hours as a snapshot of the crawled data, and then restart the crawling VM to see the new files. This worked really quite well in testing with a small amount of files, however a few issues became apparent, First of all FAT32 does have file limits that need to be paid attention to. For example, FAT32 is not able to have more than 255 files in the root directory, so you have to be sure to spread out your files in folder structures.
 
 Another issue to keep in mind is that the maximum drive size for FAT32 is 32GB (approx), This means the amount of textual content can't go bigger than that ( or we would have to spawn more virtual drives ) this is however a non issue at this time, because the crawled content is far below that.
 
@@ -89,18 +89,18 @@ After tweaking the settings involving the disk caches, a slightly more construct
 
 ![A blue screen of death](bsod.png)
 
-This is good! I can search for `exception 05 has occurred at 0028:C2920074` ! Right? As it happens, there is very little infomation about this kind of crash on the internet (it may have existed at somepoint in the past, but since been removed, afterall, the OS is 20 years old), however the one infomation I could gather from searching is that it was VFAT driver related, suspecting a bad combo between high IO load and QEMU's [INT_13](https://en.wikipedia.org/wiki/INT_13H) implementation, I went to the only other file system/data input system avalible, CD/DVD ROM!
+This is good! I can search for `exception 05 has occurred at 0028:C2920074` ! Right? As it happens, there is very little information about this kind of crash on the internet (it may have existed at some point in the past, but since been removed, after all, the OS is 20 years old), however the one information I could gather from searching is that it was VFAT driver related, suspecting a bad combo between high IO load and QEMU's [INT_13](https://en.wikipedia.org/wiki/INT_13H) implementation, I went to the only other file system/data input system available, CD/DVD ROM!
 
 After doing a small 500MB test ( a test that FAT32 could not pass ) we had a small index!
 
 ![The test index built](index-built.png)
 
-At this point we had to scale up the solution to the 300k / 4 GB of files, I discovered that Windows 98 does support DVD's however only shows in the UI that the drive is 2GB, even if the drive itself is much larger than that, any how, that turned out to not matter as all content was accessable on the drive and a inital index was (slowly) built.
+At this point we had to scale up the solution to the 300k / 4 GB of files, I discovered that Windows 98 does support DVD's however only shows in the UI that the drive is 2GB, even if the drive itself is much larger than that, any how, that turned out to not matter as all content was accessible on the drive and a initial index was (slowly) built.
 
 
 ## Sanitise the index interface
 
-The only problem with using a 20 year old indexer, is that it's likely a **very** bad idea to expose directly to the internet, The other issue is that most of the pages the interface serves referaces local ( as in, file:// ) assets, meaning that a simple reverse proxy would not work.
+The only problem with using a 20 year old indexer, is that it's likely a **very** bad idea to expose directly to the internet, The other issue is that most of the pages the interface serves references local ( as in, file:// ) assets, meaning that a simple reverse proxy would not work.
 
 In addition, local paths are not very useful to people searching, For this `alta-sanitise` was written to provide a sane front end to it, while still keeping the windows 98 AltaVista index as it's backend
 
@@ -163,7 +163,7 @@ REMOVE ME: EDITORS NOTE FOR FINAL FLOW
 
 # Monitoring windows 98
 
-Most of my servers are monitoried using collectd, Unfortunetly there is no Windows 98 client for collectd, so I decided to make one.
+Most of my servers are monitored using collectd, Unfortunately there is no Windows 98 client for collectd, so I decided to make one.
 
 A simple Visual Basic 6 application will poll every 10 seconds and output [collectd command strings](https://collectd.org/wiki/index.php/Plain_text_protocol#PUTVAL) over the serial port ( where it can be passed on to collectd on the hypervisor ):
 
