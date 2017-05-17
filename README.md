@@ -5,5 +5,5 @@ A system/search engine infrastructure to run a search index for the gopher proto
 
 ![ExampleScreenshot](blog/rewritten-search.png)
 
-You can realistically find out more infomation about this over at the blog post:
+You can realistically find out more information about this over at the blog post:
 
