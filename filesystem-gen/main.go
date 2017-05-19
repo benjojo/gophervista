@@ -15,7 +15,7 @@ import (
 
 func main() {
 	dbpath := flag.String("dbpath", "./crawl.db", "Where to find the database")
-	opath := flag.String("outputpath", "./fat32/", "Where to find the database")
+	opath := flag.String("outputpath", "./cds/", "Where to put the folders")
 	flag.Parse()
 	log.Printf("Making filesystem...")
 
@@ -30,7 +30,10 @@ func main() {
 	}
 
 	filesmoved := 0
-	os.Mkdir(*opath+"0/", 0777)
+	cd := 0
+	bytesOnDisk := 0
+
+	os.MkdirAll(*opath+fmt.Sprint(cd)+"/0/", 0777)
 
 	filepath.Walk("./data", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -54,11 +57,18 @@ func main() {
 			return nil
 		}
 
+		if bytesOnDisk > 1900000000 {
+			bytesOnDisk = 0
+			cd++
+			os.MkdirAll(fmt.Sprintf("%s%d/", *opath, cd), 0777)
+		}
+		bytesOnDisk += int(info.Size())
+
 		if filesmoved%1000 == 0 {
-			os.Mkdir(fmt.Sprintf("%s%d/", *opath, filesmoved/1000), 0777)
+			os.MkdirAll(fmt.Sprintf("%s%d/%d/", *opath, cd, filesmoved/1000), 0777)
 		}
 
-		dstpath := fmt.Sprintf("%s%d/%d.txt", *opath, filesmoved/1000, dbid)
+		dstpath := fmt.Sprintf("%s%d/%d/%d.txt", *opath, cd, filesmoved/1000, dbid)
 		err = copy(path, dstpath)
 		if err != nil {
 			log.Printf("failed to copy file over to %s - %s", dstpath, err.Error())

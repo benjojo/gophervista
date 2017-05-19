@@ -1,6 +1,0 @@
-label: dos
-label-id: 0x3945623c
-device: /dev/loop0
-unit: sectors
-
-/dev/loop0p1 : start=        2048, size=    16775168, type=b
