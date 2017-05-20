@@ -29,3 +29,4 @@ crawl.db
 crawl.db*
 *.tar
 blog-gopher-bridge/blog-gopher-bridge
+vm-harness/vm-harness
