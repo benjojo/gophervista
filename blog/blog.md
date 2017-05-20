@@ -38,7 +38,7 @@ However in the end, HTTP won out over gopher and it became the protocol that mos
 
 Search engines exist for HTTP, and gopher itself has support for searching in the protocol, but all the search engines for gopher are in "gopherspace". None really existed in HTTP (that I could find).
 
-I had a friend run a [massscan](https://github.com/robertdavidgraham/masscan) over the internet for port 70, and then filtered the results for real gopher servers:
+I had a [friend](https://twitter.com/2sec4u) run a [zmap](https://github.com/zmap/zmap) scan over the internet for port 70, and then filtered the results for real gopher servers:
 
 ```
 [ben@aura tmp]$ pv gopher.raw | grep 'read":"i' | jq .ip | sort -n | uniq -c | wc -l
