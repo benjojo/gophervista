@@ -116,56 +116,15 @@ Leaving the final flow looking like this:
 
 ![Final flow](flow.png)
 
-```
-REMOVE ME: EDITORS NOTE FOR FINAL FLOW 
-
-                                    Internet
-
-                                        +
-                                        |
-                                        |
-                                        |
-                                        |
-                                        v
-
-+-----------------+     +---------------------------------+
-|                 |     |                                 |
-|  alta_sanitise  | <---+         nginx/lighttpd          |
-|                 |     |                                 |
-+--------+--------+     +---------------------------------+
-         |
-         |
-         |
-+--------+------------------------------------------------+
-|        |                                                |
-|        v   QEMU ( with userspace net and port fwd )     |
-|                                                         |
-|   +-----------+    +--------------------------------+   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |  stunnel  +--> |      AltaVista interface       |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   |           |    |                                |   |
-|   +-----------+    +--------------------------------+   |
-|                                                         |
-|                                                         |
-+---------------------------------------------------------+
-```
-
 # Monitoring Windows 98
 
 Most of my servers are monitored using collectd. Unfortunately there is no Windows 98 client for collectd (!?), so I decided to make one.
 
 A simple Visual Basic 6 application will poll every 10 seconds and output [collectd command strings](https://collectd.org/wiki/index.php/Plain_text_protocol#PUTVAL) over the serial port (where it can be passed on to collectd on the hypervisor):
 
-<picture>
+![VB6 and the serial output](demo.png)
+
+![Grafana screenshot](grafana.png)
 
 This code can be found separately at: https://github.com/benjojo/win32-collectd
 
