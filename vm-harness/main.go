@@ -12,11 +12,11 @@ import (
 )
 
 func main() {
-	qemucmd := exec.Command("/usr/bin/qemu-system-x86_64",
+	qemucmd := exec.Command("/usr/local/bin/qemu-system-x86_64",
 		"-m", "192",
 		"-drive", "file=98.qcow2,id=disk,cache=unsafe",
-		"-net", "nic,model=ne2k_isa", "-net", "user",
-		"-net", "user,id=eth0,hostfwd=tcp:127.0.0.1:5555-:8443",
+		"-net", "nic,model=ne2k_isa",
+		"-net", "user,hostfwd=tcp:127.0.0.1:5555-:8443",
 
 		"-drive", "file=0.iso,index=3,media=cdrom",
 		"-drive", "file=1.iso,index=1,media=cdrom",
@@ -24,7 +24,6 @@ func main() {
 
 		"-vnc", "127.0.0.1:0",
 		"-vga", "cirrus",
-		"-qmp", "unix:./qmp-sock,server,nowait", // to read off the qemu system stats
 		"-serial", "stdio") // to read off the windows 98 reporter
 
 	qemucmd.Stderr = os.Stderr
