@@ -16,12 +16,12 @@ func main() {
 		"-m", "192",
 		"-drive", "file=98.qcow2,id=disk,cache=unsafe",
 		"-net", "nic,model=ne2k_isa", "-net", "user",
+		"-net", "user,id=eth0,hostfwd=tcp:127.0.0.1:5555-:8443",
 
 		"-drive", "file=0.iso,index=3,media=cdrom",
 		"-drive", "file=1.iso,index=1,media=cdrom",
 		"-drive", "file=2.iso,index=2,media=cdrom",
 
-		"-redir", "tcp:5555:10.0.2.15:8443",
 		"-vnc", "127.0.0.1:0",
 		"-vga", "cirrus",
 		"-qmp", "unix:./qmp-sock,server,nowait", // to read off the qemu system stats
