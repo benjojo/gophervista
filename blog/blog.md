@@ -135,6 +135,8 @@ Now that I have a sizeable index of the gopher space, I feel like I should give 
 
 ![my blog on gopher](tty-my-blog.gif)
 
-You can now find my blog on gopher at `gopher.blog.benjojo.co.uk`. 
+You can now find my blog on gopher at `gopher.blog.benjojo.co.uk`.
 
-You can find all of the code for this project over at: https://github.com/benjojo/gophervista
+# Code, Links etc
+
+You can find the (hopefully) working search engine at: http://gophervista.benjojo.co.uk and the code is over at https://github.com/benjojo/gophervista
