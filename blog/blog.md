@@ -109,9 +109,7 @@ However in alta-sanitise, we use the database we formed using crawling, to rewri
 
 ![A sample search on the production interface](rewritten-search.png)
 
-To ensure the server powering this project could be used for another project, lighttpd was put in front as a reverse proxy and currently cached with Cloudflare. (MITM!!!11!)
-
-This leaves the final flow looking like this:
+To ensure the VM could be used for more than one project, lighttpd was put in front as a reverse proxy of `alta-sanitise`, and Cloudflare used for cache. This leaves the final flow looking like this:
 
 ![Final flow](flow.png)
 
