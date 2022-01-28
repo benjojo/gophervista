@@ -8,28 +8,14 @@ IMPORT_PATH := github.com/benjojo/gophervista
 # Space separated patterns of packages to skip in list, test, format.
 IGNORED_PACKAGES := /vendor/
 
-.PHONY: all
-all: crawler filesystem-gen alta-sanitise blog-gopher-bridge vm-harness
+.PHONY: build
+build: .GOPATH/.ok
+	$Q go build $(if $V,-v) $(VERSION_FLAGS) -o bin/crawler $(IMPORT_PATH)/crawler 
+	$Q go build $(if $V,-v) $(VERSION_FLAGS) -o bin/filesystem-gen $(IMPORT_PATH)/filesystem-gen
+	$Q go build $(if $V,-v) $(VERSION_FLAGS) -o bin/alta-sanitise $(IMPORT_PATH)/alta-sanitise
+	$Q go build $(if $V,-v) $(VERSION_FLAGS) -o bin/blog-gopher-bridge $(IMPORT_PATH)/blog-gopher-bridge
+	$Q go build $(if $V,-v) $(VERSION_FLAGS) -o bin/vm-harness $(IMPORT_PATH)/vm-harness
 
-.PHONY: crawler
-crawler: .GOPATH/.ok
-	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/crawler
-
-.PHONY: filesystem-gen
-filesystem-gen: .GOPATH/.ok
-	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/filesystem-gen
-
-.PHONY: alta-sanitise
-alta-sanitise: .GOPATH/.ok
-	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/alta-sanitise
-
-.PHONY: blog-gopher-bridge
-blog-gopher-bridge: .GOPATH/.ok
-	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/blog-gopher-bridge
-
-.PHONY: vm-harness
-vm-harness: .GOPATH/.ok
-	$Q go install $(if $V,-v) $(VERSION_FLAGS) $(IMPORT_PATH)/vm-harness
 
 ### Code not in the repository root? Another binary? Add to the path like this.
 # .PHONY: otherbin
@@ -88,17 +74,13 @@ format: bin/goimports .GOPATH/.ok
 
 .PHONY: setup
 setup: clean .GOPATH/.ok
-	@if ! grep "/.GOPATH" .gitignore > /dev/null 2>&1; then \
-	    echo "/.GOPATH" >> .gitignore; \
-	    echo "/bin" >> .gitignore; \
-	fi
-	go get -u github.com/FiloSottile/gvt
-	- ./bin/gvt fetch golang.org/x/tools/cmd/goimports
-	- ./bin/gvt fetch github.com/wadey/gocovmerge
+
 
 VERSION          := $(shell git describe --tags --always --dirty="-dev")
 DATE             := $(shell date -u '+%Y-%m-%d-%H%M UTC')
+#VERSION_FLAGS    := -ldflags='-extldflags=-static -X "main.Version=$(VERSION)" -X "main.BuildTime=$(DATE)"'
 VERSION_FLAGS    := -ldflags='-X "main.Version=$(VERSION)" -X "main.BuildTime=$(DATE)"'
+NOSTATIC_VERSION_FLAGS    := -ldflags='-X "main.Version=$(VERSION)" -X "main.BuildTime=$(DATE)"'
 
 # cd into the GOPATH to workaround ./... not following symlinks
 _allpackages = $(shell ( cd $(CURDIR)/.GOPATH/src/$(IMPORT_PATH) && \
@@ -109,28 +91,9 @@ _allpackages = $(shell ( cd $(CURDIR)/.GOPATH/src/$(IMPORT_PATH) && \
 # memoize allpackages, so that it's executed only once and only if used
 allpackages = $(if $(__allpackages),,$(eval __allpackages := $$(_allpackages)))$(__allpackages)
 
-export GOPATH := $(CURDIR)/.GOPATH
-unexport GOBIN
-
 Q := $(if $V,,@)
 
 .GOPATH/.ok:
-	$Q mkdir -p "$(dir .GOPATH/src/$(IMPORT_PATH))"
-	$Q ln -s ../../../.. ".GOPATH/src/$(IMPORT_PATH)"
-	$Q mkdir -p .GOPATH/test .GOPATH/cover
-	$Q mkdir -p bin
-	$Q ln -s ../bin .GOPATH/bin
-	$Q touch $@
-
-.PHONY: bin/gocovmerge bin/goimports
-bin/gocovmerge: .GOPATH/.ok
-	@test -d ./vendor/github.com/wadey/gocovmerge || \
-	    { echo "Vendored gocovmerge not found, try running 'make setup'..."; exit 1; }
-	$Q go install $(IMPORT_PATH)/vendor/github.com/wadey/gocovmerge
-bin/goimports: .GOPATH/.ok
-	@test -d ./vendor/golang.org/x/tools/cmd/goimports || \
-	    { echo "Vendored goimports not found, try running 'make setup'..."; exit 1; }
-	$Q go install $(IMPORT_PATH)/vendor/golang.org/x/tools/cmd/goimports
 
 # Based on https://github.com/cloudflare/hellogopher - v1.1 - MIT License
 #
