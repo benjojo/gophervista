@@ -162,10 +162,12 @@ func getPostListings(c net.Conn) {
 	lines := strings.Split(string(blogbytes), "\n")
 	for _, ln := range lines {
 		if len(listingLinkRegexp.FindAllStringSubmatch(ln, -1)) != 0 &&
-			!strings.Contains(ln, "</a>") {
+			strings.Contains(ln, "</a>") {
+
 			lnk := listingLinkRegexp.FindAllStringSubmatch(ln, -1)
 			for _, i := range lnk {
 				translate := strings.Replace(i[1], "/post", "", 1)
+				i[2] = strings.Replace(i[2], "</a>", "", 1)
 				c.Write([]byte(fmt.Sprintf(rfc1436.TypeMenuEntity+"%s\t%s\t%s\t%d\r\n", i[2], "/"+translate, *gopherhostname, *port)))
 			}
 		}
